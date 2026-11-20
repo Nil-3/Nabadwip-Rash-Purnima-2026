@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nabadwip Rash Purnima 2026</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet JS (For Map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Leaflet Routing Machine (For In-App Route Preview) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --burgundy: #67001a;
+            --cream: #fdfbf7;
+            --gold: #b38b4d;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --text-main: #2d2926;
+            --text-muted: #6b7280;
+            --nav-bg: #ffffff;
+            --food-accent: #ea580c;
+        }
+
+        body.dark-mode {
+            --burgundy: #e5b869;
+            --cream: #120c0e;
+            --gold: #c99b49;
+            --card-bg: #1e1418;
+            --border-color: #36242b;
+            --text-main: #f3ede6;
+            --text-muted: #a8999e;
+            --nav-bg: #1a1014;
+            --food-accent: #fb923c;
+        }
+
+        body {
+            background-color: var(--cream);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            padding-bottom: 80px;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        h1, h2, h3, .posh-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--burgundy);
+        }
+
+        .theme-card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .theme-header, .theme-nav {
+            background-color: var(--nav-bg);
+            border-color: var(--border-color);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .theme-muted {
+            color: var(--text-muted);
+        }
+
+        .theme-input {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .nav-item {
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+        .nav-item.active {
+            color: var(--burgundy);
+            font-weight: 600;
+        }
+        .nav-item.active svg {
+            stroke: var(--burgundy);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tab-content.active, .user-pulse { animation: none; }
+        }
+        
+        #map-wrapper {
+            position: relative;
+            height: calc(100vh - 185px);
+            min-height: 360px;
+            width: 100%;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 12px;
+            z-index: 1;
+        }
+
+        /* Soft night-vision filter on map tiles in Dark Mode */
+        body.dark-mode .leaflet-tile-pane {
+            filter: brightness(0.82) contrast(1.08) saturate(0.85);
+        }
+
+        .gold-border { border-left: 4px solid var(--gold); }
+        .food-border { border-left: 4px solid var(--food-accent); }
+
+        /* Hide bulky default Leaflet Routing Machine text box on mobile */
+        .leaflet-routing-container {
+            display: none !important;
+        }
+
+        /* Pulsing Blue Dot for Live User Location */
+        .user-pulse {
+            width: 16px;
+            height: 16px;
+            background-color: #2563eb;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 rgba(37, 99, 235, 0.5);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6); }
+            70% { box-shadow: 0 0 0 14px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+
+        /* Sub-tab pill buttons inside Guide tab */
+        .subtab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .subtab-btn.active {
+            background-color: #67001a;
+            color: #ffffff;
+            border-color: #67001a;
+        }
+        body.dark-mode .subtab-btn.active {
+            background-color: #b38b4d;
+            color: #120c0e;
+            border-color: #b38b4d;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="theme-header shadow-sm sticky top-0 z-50 px-4 py-3 border-b flex items-center justify-between">
+        <!-- Language Toggle -->
+        <button onclick="toggleLanguage()" id="lang-btn" aria-label="Switch Language" class="theme-card border px-3 py-2 rounded-lg text-xs font-bold tracking-wide min-h-[40px] active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-[#b38b4d]" style="color: var(--burgundy); border-color: var(--gold);">
+            বাংলা
+        </button>
+
+        <!-- Title -->
+        <div class="text-center px-2">
+            <h1 id="app-title" class="text-xl font-bold leading-tight">Rash Purnima</h1>
+            <p id="app-subtitle" class="text-[11px] theme-muted uppercase tracking-widest mt-0.5">Nabadwip Heritage Festival</p>
+        </div>
+
+        <!-- Night Mode Toggle -->
+        <button onclick="toggleDarkMode()" id="theme-btn" aria-label="Toggle Night Mode" class="theme-card border px-3 py-2 rounded-lg min-h-[40px] flex items-center justify-center active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-[#b38b4d]" style="border-color: var(--gold); color: var(--burgundy);">
+            <!-- SVG injected via JS -->
+        </button>
+    </header>
+
+    <!-- MAIN CONTENT AREAS -->
+    <main class="p-4 max-w-2xl mx-auto">
+        
+        <!-- 1. PUJAS TAB -->
+        <section id="tab-pujas" class="tab-content active">
+            <div class="flex justify-between items-center mb-3 border-b pb-2" style="border-color: var(--border-color);">
+                <h2 id="pujas-heading" class="text-xl font-bold">Famous Shakta Rash Pujas</h2>
+                <span id="visited-counter" class="text-xs font-bold px-2.5 py-1 rounded-full border" style="color: var(--burgundy); border-color: var(--gold);">
+                    0 / 31
+                </span>
+            </div>
+
+            <!-- Search & Nearest Controls -->
+            <div class="flex gap-2 mb-4">
+                <label for="puja-search" class="sr-only">Search puja or area</label>
+                <input type="text" id="puja-search" oninput="renderPujaList()" placeholder="Search puja or area..." class="theme-input flex-1 border rounded-lg px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#b38b4d]">
+                <button onclick="sortByNearest()" id="nearest-btn" class="bg-[#67001a] text-white px-3.5 py-2.5 rounded-lg text-xs font-semibold shadow-sm whitespace-nowrap min-h-[44px] active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-[#b38b4d]">
+                    Nearest
+                </button>
+            </div>
+
+            <div id="puja-list-container" class="space-y-3">
+                <!-- Injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- 2. MAP TAB -->
+        <section id="tab-map" class="tab-content">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                <div>
+                    <h2 id="map-heading" class="text-xl font-bold">Festival Map</h2>
+                    <div class="flex items-center gap-3 mt-1 text-[11px] theme-muted">
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-[#67001a] border border-[#b38b4d]"></span><span id="legend-pujas">Pujas</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block bg-[#ea580c] border border-white"></span><span id="legend-food">Food</span></span>
+                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block bg-[#1d4ed8]"></span><span id="legend-transit">Transit</span></span>
+                    </div>
+                </div>
+
+                <!-- Map Controls: Food Toggle + My Location -->
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleFoodLayer()" id="food-toggle-btn" aria-pressed="true" class="px-3 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 min-h-[40px] active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-[#ea580c]">
+                        <span class="w-2.5 h-2.5 rounded-full bg-white inline-block"></span>
+                        <span id="food-toggle-text">Food: ON</span>
+                    </button>
+                    <button onclick="locateUserOnce()" id="locate-btn" class="theme-card border px-3 py-2 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 min-h-[40px] active:scale-95 transition focus:outline-none focus:ring-2 focus:ring-[#b38b4d]" style="color: var(--burgundy); border-color: var(--gold);">
+                        <svg class="w-4 h-4 text-[#2563eb]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="locate-btn-text">My Location</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="theme-card p-1 rounded-xl shadow-sm border">
+                <div id="map-wrapper">
+                    <div id="map"></div>
+
+                    <!-- Floating Active Navigation Bar -->
+                    <div id="nav-banner" class="hidden absolute bottom-3 left-3 right-3 theme-card p-3 rounded-xl shadow-lg border z-[1000]" style="border-color: var(--gold);">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="pr-2">
+                                <span id="nav-label" class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--gold);">Live Route Preview</span>
+                                <h3 id="nav-dest-name" class="text-sm font-bold leading-tight">Destination</h3>
+                                <p id="nav-status" class="text-xs theme-muted mt-0.5">Tracking your live GPS...</p>
+                            </div>
+                            <button onclick="stopNavigation()" aria-label="Stop Navigation" class="theme-muted text-xs font-bold px-2.5 py-1.5 rounded border min-h-[34px]" style="border-color: var(--border-color);">✕</button>
+                        </div>
+                        <button id="nav-gmaps-btn" class="w-full bg-[#67001a] text-white py-2.5 px-3 rounded-lg text-xs font-semibold shadow flex items-center justify-center gap-2 min-h-[42px] active:scale-95 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <span id="nav-gmaps-text">Start Voice Navigation (Google Maps)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. EMERGENCY CONTACTS TAB -->
+        <section id="tab-contacts" class="tab-content">
+            <div class="flex justify-between items-center mb-4 border-b pb-2" style="border-color: var(--border-color);">
+                <h2 id="sos-heading" class="text-xl font-bold">Emergency & Helplines</h2>
+                <span class="offline-badge text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Works Offline</span>
+            </div>
+            <div id="sos-container" class="grid grid-cols-1 gap-3">
+                <!-- Injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- 4. GUIDELINES & LOCAL FOOD TAB -->
+        <section id="tab-guidelines" class="tab-content">
+            <div class="flex justify-between items-center mb-3 border-b pb-2" style="border-color: var(--border-color);">
+                <h2 id="guide-heading" class="text-xl font-bold">Festival Guide</h2>
+                <span class="offline-badge text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Works Offline</span>
+            </div>
+
+            <!-- Sub-Tab Switcher: Rules vs Local Food -->
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="switchGuideSubTab('rules')" id="subtab-rules" class="subtab-btn active py-2.5 px-3 rounded-lg text-xs font-bold min-h-[44px]">
+                    Festival Rules
+                </button>
+                <button onclick="switchGuideSubTab('food')" id="subtab-food" class="subtab-btn py-2.5 px-3 rounded-lg text-xs font-bold min-h-[44px]">
+                    Local Food & Sweets (10)
+                </button>
+            </div>
+
+            <!-- Sub-Tab 1: Rules -->
+            <div id="guide-rules-panel" class="space-y-4">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <!-- Sub-Tab 2: Local Food & Sweets -->
+            <div id="guide-food-panel" class="hidden space-y-3">
+                <!-- Injected via JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="theme-nav fixed bottom-0 w-full border-t flex justify-around items-center h-[72px] pb-1 z-50" aria-label="Main Navigation">
+        <button onclick="switchTab('pujas')" id="nav-pujas" class="nav-item active flex flex-col items-center justify-center w-full h-full">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+            <span id="tab-lbl-pujas" class="text-[11px] font-medium uppercase tracking-wider">Pujas</span>
+        </button>
+        <button onclick="switchTab('map')" id="nav-map" class="nav-item flex flex-col items-center justify-center w-full h-full">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+            <span id="tab-lbl-map" class="text-[11px] font-medium uppercase tracking-wider">Map</span>
+        </button>
+        <button onclick="switchTab('contacts')" id="nav-contacts" class="nav-item flex flex-col items-center justify-center w-full h-full">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+            <span id="tab-lbl-sos" class="text-[11px] font-medium uppercase tracking-wider">SOS</span>
+        </button>
+        <button onclick="switchTab('guidelines')" id="nav-guidelines" class="nav-item flex flex-col items-center justify-center w-full h-full">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span id="tab-lbl-guide" class="text-[11px] font-medium uppercase tracking-wider">Guide</span>
+        </button>
+    </nav>
+
+    <!-- Application Logic -->
+    <script>
+        // --- 1. DATA: 31 PUJAS ---
+        const pujasList = [
+            { id: 1, name: "Boro Syama (বড় শ্যামা)", loc: "Tegharipara Rd", lat: 23.4000, lng: 88.3600 },
+            { id: 2, name: "Gourangini Mata (গৌরাঙ্গিনী মাতা)", loc: "Jognath Tala Rd", lat: 23.4064, lng: 88.3620 },
+            { id: 3, name: "Mejo Syama (মেজ শ্যামা)", loc: "Ranirchara", lat: 23.3947, lng: 88.3614 },
+            { id: 4, name: "Poramatala Mahishasurmardini", loc: "Poramatala", lat: 23.4104, lng: 88.3630 },
+            { id: 5, name: "Boro Tara (বড় তারা)", loc: "Vyaspara", lat: 23.3965, lng: 88.3615 },
+            { id: 6, name: "Choto Syama (ছোট শ্যামা)", loc: "Malanchapara", lat: 23.3970, lng: 88.3600 },
+            { id: 7, name: "Sejo Shyama Maa (সেজ শ্যামা)", loc: "Ramkrishnapara", lat: 23.3950, lng: 88.3590 },
+            { id: 8, name: "Bindhyabasini (বিন্ধ্যবাসিনী)", loc: "Sribasangan / Agameswaripara", lat: 23.3940, lng: 88.3620 },
+            { id: 9, name: "Nandipara Mahishamardini Mata", loc: "Nandipara", lat: 23.3985, lng: 88.3580 },
+            { id: 10, name: "Mahishasuramardini", loc: "Harisabhapara", lat: 23.3935, lng: 88.3595 },
+            { id: 11, name: "Chhinnamasta (ছিন্নমস্তা)", loc: "Yoginathala", lat: 23.3990, lng: 88.3640 },
+            { id: 12, name: "Chamunda (চামুণ্ডা)", loc: "Charakdanga", lat: 23.4010, lng: 88.3610 },
+            { id: 13, name: "Dakshina Kali (দক্ষিণা কালী)", loc: "Puranopara", lat: 23.4020, lng: 88.3635 },
+            { id: 14, name: "Bhadra Kali Mata", loc: "Bowbazar", lat: 23.4035, lng: 88.3625 },
+            { id: 15, name: "Smashan Kali (শ্মশান কালী)", loc: "Smashan Ghat", lat: 23.3920, lng: 88.3605 },
+            { id: 16, name: "Chandi Mata (চণ্ডী মাতা)", loc: "Agameswaripara", lat: 23.3945, lng: 88.3630 },
+            { id: 17, name: "Sri Annapurna Mata", loc: "Bowbazar Rd", lat: 23.4040, lng: 88.3645 },
+            { id: 18, name: "Muktakeshi Maa", loc: "Dandapani Tala More", lat: 23.4110, lng: 88.3610 },
+            { id: 19, name: "Krishnakali Mata", loc: "Krishna Kali More", lat: 23.4055, lng: 88.3600 },
+            { id: 20, name: "Maa Bamakali (বামাকালী)", loc: "Poramatala Area", lat: 23.4100, lng: 88.3620 },
+            { id: 21, name: "Shri Elania Kali Mata", loc: "Motilal Roy Road", lat: 23.4060, lng: 88.3590 },
+            { id: 22, name: "Ganesh Janani Mata", loc: "Bhare Para Road", lat: 23.3955, lng: 88.3640 },
+            { id: 23, name: "Bharat Mata (ভারতমাতা)", loc: "Sribas Angan Ghat Road", lat: 23.3930, lng: 88.3610 },
+            { id: 24, name: "Naba Durga Mata (নবদুর্গা)", loc: "Kalitala Road", lat: 23.4070, lng: 88.3635 },
+            { id: 25, name: "Shaba Shiva Mata", loc: "Tegharipara Road", lat: 23.4005, lng: 88.3605 },
+            { id: 26, name: "Shree Shree Ganga Mata", loc: "Nabadwip Ghat Area", lat: 23.3915, lng: 88.3620 },
+            { id: 27, name: "Dumureshwari Mata", loc: "Radhabazar Park", lat: 23.4025, lng: 88.3595 },
+            { id: 28, name: "Nistarini (নিস্তারিণী)", loc: "Baralghat Road", lat: 23.3980, lng: 88.3625 },
+            { id: 29, name: "Anandamoyi (আনন্দময়ী)", loc: "Benepara", lat: 23.4015, lng: 88.3640 },
+            { id: 30, name: "Rajrajeswari", loc: "Mahaprabhu Para", lat: 23.3965, lng: 88.3585 },
+            { id: 31, name: "Tripurasundari", loc: "Poramatala Area", lat: 23.4095, lng: 88.3645 }
+        ];
+
+        // --- 2. DATA: 10 LOCAL FOOD & LAL DOI SPOTS (Inland Coordinates) ---
+        const foodSpots = [
+            {
+                id: 101,
+                name: "Laxmi Narayan Mistanna Bhandar (Panchu's)",
+                nameBn: "লক্ষ্মী নারায়ণ মিষ্টান্ন ভাণ্ডার (পাঁচুর দোকান)",
+                cat: "Lal Doi & Sweets", catBn: "লাল দই ও মিষ্টি",
+                loc: "Abhay Maa Tala, Dakshin Banga Para", locBn: "অভয় মা তলা, দক্ষিণ বঙ্গ পাড়া",
+                desc: "Iconic Lal Doi, Khirer Pantua, and morning Kochuri-Singara.",
+                descBn: "ঐতিহ্যবাহী লাল দই, ক্ষীরের পান্তুয়া ও সকালের কচুরি-সিঙ্গাড়া।",
+                lat: 23.4018, lng: 88.3612
+            },
+            {
+                id: 102,
+                name: "Ramkrishna Mistanna Bhaban",
+                nameBn: "রামকৃষ্ণ মিষ্টান্ন ভবন",
+                cat: "Lal Doi & Sweets", catBn: "লাল দই ও মিষ্টি",
+                loc: "Baral Ghat Road, Tegharipara", locBn: "বড়াল ঘাট রোড, তেঘরিপাড়া",
+                desc: "Local favorite near the ferry ghat for thick Khir Doi.",
+                descBn: "ফেরি ঘাটের কাছে ঘন ক্ষীর দই ও ঐতিহ্যবাহী মিষ্টির জন্য বিখ্যাত।",
+                lat: 23.3998, lng: 88.3638
+            },
+            {
+                id: 103,
+                name: "Bimala Mistanna Bhandar",
+                nameBn: "বিমলা মিষ্টান্ন ভাণ্ডার",
+                cat: "Lal Doi & Sweets", catBn: "লাল দই ও মিষ্টি",
+                loc: "Radhabazar, Poramatala Rd", locBn: "রাধাবাজার, পোড়ামাতলা রোড",
+                desc: "Right in the heart of the Rash Purnima pandal belt.",
+                descBn: "পোড়ামাতলা মণ্ডপ এলাকার একেবারে কেন্দ্রে জনপ্রিয় মিষ্টির দোকান।",
+                lat: 23.4078, lng: 88.3632
+            },
+            {
+                id: 104,
+                name: "Sasti Doi Ghar",
+                nameBn: "ষষ্ঠী দই ঘর",
+                cat: "Lal Doi & Sweets", catBn: "লাল দই ও মিষ্টি",
+                loc: "Poraghat Road, Tegharipara", locBn: "পোড়াঘাট রোড, তেঘরিপাড়া",
+                desc: "Dedicated curd shop famous for clay-pot Lal Doi.",
+                descBn: "মাটির ভাঁড়ের খাঁটি লাল দইয়ের জন্য পরিচিত।",
+                lat: 23.4008, lng: 88.3622
+            },
+            {
+                id: 105,
+                name: "Nabadwip Khir Doi Ghor",
+                nameBn: "নবদ্বীপ ক্ষীর দই ঘর",
+                cat: "Lal Doi & Sweets", catBn: "লাল দই ও মিষ্টি",
+                loc: "Prachin Mayapur", locBn: "প্রাচীন মায়াপুর",
+                desc: "Well-rated local spot for Nabadwip's signature Khir Doi.",
+                descBn: "নবদ্বীপের বিখ্যাত ক্ষীর দইয়ের অন্যতম সেরা ঠিকানা।",
+                lat: 23.4085, lng: 88.3615
+            },
+            {
+                id: 106,
+                name: "Kundu Sweets",
+                nameBn: "কুণ্ডু সুইটস",
+                cat: "Lal Doi & Sweets", catBn: "লাল দই ও মিষ্টি",
+                loc: "Poramatala Rd, Harisabha Para", locBn: "পোড়ামাতলা রোড, হরিসভা পাড়া",
+                desc: "Classic neighborhood sweet shop operating since 1960.",
+                descBn: "১৯৬০ সাল থেকে পোড়ামাতলা রোডের সুপরিচিত মিষ্টান্ন প্রতিষ্ঠান।",
+                lat: 23.4052, lng: 88.3628
+            },
+            {
+                id: 107,
+                name: "Bikram Hotel (Raj Kumar Ghosh)",
+                nameBn: "বিক্রম হোটেল (রাজ কুমার ঘোষ)",
+                cat: "Local Meals", catBn: "বাঙালি খাবার",
+                loc: "Nabadwip Main Road", locBn: "নবদ্বীপ মেইন রোড",
+                desc: "Budget-friendly local institution for hearty Bengali thalis.",
+                descBn: "সুলভ মূল্যে ঐতিহ্যবাহী বাঙালি ভাত-তরকারির জনপ্রিয় হোটেল।",
+                lat: 23.4028, lng: 88.3608
+            },
+            {
+                id: 108,
+                name: "Hotel Nilima Paribar",
+                nameBn: "হোটেল নীলিমা পরিবার",
+                cat: "Pure Veg Dining", catBn: "নিরামিষ রেস্তোরাঁ",
+                loc: "Near Nabadwip Bus Stand", locBn: "নবদ্বীপ বাস স্ট্যান্ডের কাছে",
+                desc: "Top-rated pure vegetarian dining for pilgrims & families.",
+                descBn: "পরিবার ও তীর্থযাত্রীদের জন্য সেরা নিরামিষ খাবারের রেস্তোরাঁ।",
+                lat: 23.4044, lng: 88.3636
+            },
+            {
+                id: 109,
+                name: "Rangamati Restaurant",
+                nameBn: "রাঙামাটি রেস্তোরাঁ",
+                cat: "Family Dining", catBn: "ফ্যামিলি রেস্তোরাঁ",
+                loc: "Radhabazar Area", locBn: "রাধাবাজার এলাকা",
+                desc: "Comfortable sit-down restaurant for evening meals.",
+                descBn: "সন্ধ্যা ও রাতের খাবারের জন্য আরামদায়ক ফ্যামিলি রেস্তোরাঁ।",
+                lat: 23.4032, lng: 88.3620
+            },
+            {
+                id: 110,
+                name: "Sathi Restaurant",
+                nameBn: "সাথী রেস্তোরাঁ",
+                cat: "Family Dining", catBn: "ফ্যামিলি রেস্তোরাঁ",
+                loc: "Station Road, Nabadwip", locBn: "স্টেশন রোড, নবদ্বীপ",
+                desc: "Convenient Bengali & Indian dining near the station route.",
+                descBn: "স্টেশন রোডে বাঙালি ও ভারতীয় খাবারের পরিচিত রেস্তোরাঁ।",
+                lat: 23.3976, lng: 88.3582
+            }
+        ];
+
+        // --- 3. DATA: TRANSPORT & FERRY GHATS ---
+        const transitPoints = [
+            { id: 201, name: "Nabadwip Dham Railway Station", sub: "Main Rail Entry (Howrah / Bandel Line)", lat: 23.3964, lng: 88.3555 },
+            { id: 202, name: "Nabadwip Ferry Ghat (Baral Ghat)", sub: "Boats to Mayapur & Swarupganj", lat: 23.4012, lng: 88.3652 },
+            { id: 203, name: "Nabadwip Bus Stand", sub: "Krishnanagar & Kolkata Buses", lat: 23.4048, lng: 88.3642 }
+        ];
+
+        // --- 4. BILINGUAL TEXT DICTIONARY ---
+        const i18n = {
+            en: {
+                langBtn: "বাংলা",
+                title: "Rash Purnima",
+                subtitle: "Nabadwip Heritage Festival",
+                pujasHeading: "Famous Shakta Rash Pujas",
+                searchPlaceholder: "Search puja or area...",
+                nearestBtn: "Nearest",
+                mapHeading: "Festival Map",
+                legendPujas: "Pujas",
+                legendFood: "Food",
+                legendTransit: "Transit",
+                foodOn: "Food: ON",
+                foodOff: "Food: OFF",
+                locateBtn: "My Location",
+                sosHeading: "Emergency & Helplines",
+                guideHeading: "Festival Guide",
+                subtabRules: "Festival Rules",
+                subtabFood: "Local Food & Sweets (10)",
+                offlineBadge: "Works Offline",
+                tabPujas: "Pujas",
+                tabMap: "Map",
+                tabSos: "SOS",
+                tabGuide: "Guide",
+                mapBtn: "MAP",
+                navLabel: "Live Route Preview",
+                navGmaps: "Start Voice Navigation (Google Maps)",
+                sos: [
+                    { tag: "National", title: "Integrated Emergency", desc: "Police • Fire • Medical", phone: "112", label: "Call 112" },
+                    { tag: "Direct Number", title: "Nabadwip Police Station", desc: "Local police assistance", phone: "03472240404", label: "Call 03472 240404" },
+                    { tag: "Direct Number", title: "Nadia Police Control Room", desc: "District police control", phone: "03472253154", label: "Call 03472 253154" },
+                    { tag: "Direct Number", title: "Nabadwip Municipality", desc: "Netaji Subhas Road Office", phone: "03472240008", label: "Call 03472 240008" },
+                    { tag: "National", title: "Women Helpline", desc: "West Bengal Police", phone: "1091", label: "Call 1091" },
+                    { tag: "National", title: "Tourist Helpline", desc: "Govt. of India Tourist Support", phone: "1363", label: "Call 1363" }
+                ],
+                guides: [
+                    { title: "How to Reach & Ferry Ghats", text: "Arrive at Nabadwip Dham Railway Station (Eastern Railway) or cross the Bhagirathi by ferry from Swarupganj / Mayapur to Baral Ghat. Tap the blue pins on the Map tab for exact station & ghat locations." },
+                    { title: "Photography & Respect", text: "Please respect barricades and do not use flash photography directly in front of the Shakta idols. Follow instructions from local volunteers." },
+                    { title: "Traffic & Movement", text: "Nabadwip becomes a 'No Vehicle Zone' during peak festival nights. Wear comfortable walking shoes as you will need to navigate the paras (alleys) on foot." },
+                    { title: "Belongings & Safety", text: "Beware of pickpockets in massive crowds, especially near Poramatala and Dandapanitala. Keep valuables in front pockets and secure your bags." },
+                    { title: "Darshan Timings", text: "The grandest idols are best viewed late at night. The city stays awake all night during Rash Purnima, making midnight to 4 AM the traditional viewing time." }
+                ]
+            },
+            bn: {
+                langBtn: "EN",
+                title: "রাস পূর্ণিমা",
+                subtitle: "নবদ্বীপ ঐতিহ্যবাহী উৎসব",
+                pujasHeading: "বিখ্যাত শাক্ত রাস পূজা",
+                searchPlaceholder: "পূজা বা এলাকার নাম খুঁজুন...",
+                nearestBtn: "নিকটতম",
+                mapHeading: "উৎসবের মানচিত্র",
+                legendPujas: "পূজা",
+                legendFood: "খাবার",
+                legendTransit: "যাতায়াত",
+                foodOn: "খাবার: চালু",
+                foodOff: "খাবার: বন্ধ",
+                locateBtn: "আমার অবস্থান",
+                sosHeading: "জরুরি যোগাযোগ ও হেল্পলাইন",
+                guideHeading: "উৎসবের গাইড",
+                subtabRules: "উৎসবের নিয়মাবলী",
+                subtabFood: "খাবার ও লাল দই (১০)",
+                offlineBadge: "অফলাইনে কাজ করে",
+                tabPujas: "পূজা",
+                tabMap: "ম্যাপ",
+                tabSos: "জরুরি",
+                tabGuide: "গাইড",
+                mapBtn: "ম্যাপ",
+                navLabel: "লাইভ রুট প্রিভিউ",
+                navGmaps: "গুগল ম্যাপস ভয়েস নেভিগেশন",
+                sos: [
+                    { tag: "জাতীয়", title: "সমন্বিত জরুরি পরিষেবা", desc: "পুলিশ • দমকল • অ্যাম্বুলেন্স", phone: "112", label: "কল করুন ১১২" },
+                    { tag: "সরাসরি নম্বর", title: "নবদ্বীপ থানা", desc: "স্থানীয় পুলিশ সহায়তা", phone: "03472240404", label: "কল করুন 03472 240404" },
+                    { tag: "সরাসরি নম্বর", title: "নদীয়া পুলিশ কন্ট্রোল রুম", desc: "জেলা পুলিশ কন্ট্রোল", phone: "03472253154", label: "কল করুন 03472 253154" },
+                    { tag: "সরাসরি নম্বর", title: "নবদ্বীপ পৌরসভা", desc: "নেতাজি সুভাষ রোড অফিস", phone: "03472240008", label: "কল করুন 03472 240008" },
+                    { tag: "জাতীয়", title: "মহিলা হেল্পলাইন", desc: "পশ্চিমবঙ্গ পুলিশ", phone: "1091", label: "কল করুন ১০৯১" },
+                    { tag: "জাতীয়", title: "পর্যটন হেল্পলাইন", desc: "ভারত সরকার পর্যটন সহায়তা", phone: "1363", label: "কল করুন ১৩৬৩" }
+                ],
+                guides: [
+                    { title: "যাতায়াত ও ফেরি ঘাট", text: "পূর্ব রেলের নবদ্বীপ ধাম স্টেশনে নামুন অথবা মায়াপুর/স্বরূপগঞ্জ থেকে ভাগীরথী নদী পার হয়ে বড়াল ঘাটে আসুন। ম্যাপ ট্যাবে নীল পিনে স্টেশন ও ঘাটের অবস্থান দেওয়া আছে।" },
+                    { title: "ফটোগ্রাফি ও শ্রদ্ধা", text: "অনুগ্রহ করে ব্যারিকেড মেনে চলুন এবং প্রতিমার সামনে ফ্ল্যাশ লাইট ব্যবহার করবেন না। স্থানীয় স্বেচ্ছাসেবকদের নির্দেশ মেনে চলুন।" },
+                    { title: "যানবাহন ও চলাচল", text: "রাসের রাতে নবদ্বীপ 'নো ভেহিকল জোন' থাকে। পাড়ার গলি দিয়ে হাঁটার জন্য আরামদায়ক জুতো পরুন।" },
+                    { title: "জিনিসপত্র ও নিরাপত্তা", text: "পোড়ামাতলা ও দণ্ডপাণিতলার ভিড়ে পকেটমার থেকে সাবধান থাকুন। মোবাইল ও মানিব্যাগ সামনের পকেটে রাখুন।" },
+                    { title: "দর্শনের সময়", text: "শাক্ত রাসের বিশাল প্রতিমাগুলি গভীর রাতে সবচেয়ে সুন্দর দেখায়। মধ্যরাত থেকে ভোর ৪টে পর্যন্ত দর্শনের সেরা সময়।" }
+                ]
+            }
+        };
+
+        // --- 5. STATE ---
+        let currentLang = localStorage.getItem('rash_lang') || 'en';
+        let isDarkMode = localStorage.getItem('rash_dark') === 'true';
+        let visitedIds = JSON.parse(localStorage.getItem('rash_visited') || '[]');
+        let userCoords = null;
+        let isSortedByNearest = false;
+        let showFoodPins = true;
+
+        // --- 6. THEME & LANGUAGE ---
+        const moonSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
+        const sunSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
+
+        function applyDarkMode() {
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            document.getElementById('theme-btn').innerHTML = isDarkMode ? sunSvg : moonSvg;
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('rash_dark', isDarkMode);
+            applyDarkMode();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'bn' : 'en';
+            localStorage.setItem('rash_lang', currentLang);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const t = i18n[currentLang];
+            document.getElementById('lang-btn').textContent = t.langBtn;
+            document.getElementById('app-title').textContent = t.title;
+            document.getElementById('app-subtitle').textContent = t.subtitle;
+            document.getElementById('pujas-heading').textContent = t.pujasHeading;
+            document.getElementById('puja-search').placeholder = t.searchPlaceholder;
+            document.getElementById('nearest-btn').textContent = t.nearestBtn;
+            document.getElementById('map-heading').textContent = t.mapHeading;
+            document.getElementById('legend-pujas').textContent = t.legendPujas;
+            document.getElementById('legend-food').textContent = t.legendFood;
+            document.getElementById('legend-transit').textContent = t.legendTransit;
+            document.getElementById('locate-btn-text').textContent = t.locateBtn;
+            document.getElementById('sos-heading').textContent = t.sosHeading;
+            document.getElementById('guide-heading').textContent = t.guideHeading;
+            document.getElementById('subtab-rules').textContent = t.subtabRules;
+            document.getElementById('subtab-food').textContent = t.subtabFood;
+            document.getElementById('tab-lbl-pujas').textContent = t.tabPujas;
+            document.getElementById('tab-lbl-map').textContent = t.tabMap;
+            document.getElementById('tab-lbl-sos').textContent = t.tabSos;
+            document.getElementById('tab-lbl-guide').textContent = t.tabGuide;
+            document.getElementById('nav-label').textContent = t.navLabel;
+            document.getElementById('nav-gmaps-text').textContent = t.navGmaps;
+
+            document.querySelectorAll('.offline-badge').forEach(el => {
+                el.textContent = t.offlineBadge;
+            });
+
+            updateFoodToggleUI();
+            renderSOS();
+            renderGuides();
+            renderFoodList();
+            renderPujaList();
+        }
+
+        // --- 7. DISTANCE HELPER ---
+        function getDistanceMeters(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function formatDistance(meters) {
+            if (meters < 1000) return `${Math.round(meters)} m`;
+            return `${(meters / 1000).toFixed(1)} km`;
+        }
+
+        // --- 8. RENDER PUJAS, SOS, GUIDES, FOOD ---
+        function toggleVisited(pujaId) {
+            if (visitedIds.includes(pujaId)) {
+                visitedIds = visitedIds.filter(id => id !== pujaId);
+            } else {
+                visitedIds.push(pujaId);
+            }
+            localStorage.setItem('rash_visited', JSON.stringify(visitedIds));
+            renderPujaList();
+        }
+
+        function sortByNearest() {
+            if (!navigator.geolocation) {
+                alert("Location services are not supported on this device.");
+                return;
+            }
+            const btn = document.getElementById('nearest-btn');
+            btn.textContent = "...";
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    isSortedByNearest = true;
+                    btn.textContent = i18n[currentLang].nearestBtn;
+                    renderPujaList();
+                },
+                () => {
+                    btn.textContent = i18n[currentLang].nearestBtn;
+                    alert("Please allow GPS/Location access to sort by nearest.");
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function renderPujaList() {
+            const container = document.getElementById('puja-list-container');
+            const query = document.getElementById('puja-search').value.trim().toLowerCase();
+            const t = i18n[currentLang];
+
+            document.getElementById('visited-counter').textContent = `${visitedIds.length} / ${pujasList.length}`;
+
+            let list = pujasList.map(p => ({
+                ...p,
+                dist: userCoords ? getDistanceMeters(userCoords.lat, userCoords.lng, p.lat, p.lng) : null
+            }));
+
+            if (query) {
+                list = list.filter(p =>
+                    p.name.toLowerCase().includes(query) ||
+                    p.loc.toLowerCase().includes(query)
+                );
+            }
+
+            if (isSortedByNearest && userCoords) {
+                list.sort((a, b) => a.dist - b.dist);
+            }
+
+            container.innerHTML = '';
+            list.forEach((puja) => {
+                const isDone = visitedIds.includes(puja.id);
+                const card = document.createElement('div');
+                card.className = `theme-card p-3.5 rounded-lg shadow-sm border gold-border flex justify-between items-center gap-2 ${isDone ? 'opacity-70' : ''}`;
+                card.innerHTML = `
+                    <div class="flex items-start gap-3 flex-1 min-w-0">
+                        <button onclick="toggleVisited(${puja.id})" aria-label="Mark Visited" class="mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition" style="border-color: var(--gold); background-color: ${isDone ? 'var(--gold)' : 'transparent'}; color: white; font-size: 12px;">
+                            ${isDone ? '✓' : ''}
+                        </button>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold theme-muted">#${puja.id}</span>
+                                ${puja.dist !== null ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">${formatDistance(puja.dist)}</span>` : ''}
+                            </div>
+                            <h3 class="text-base font-bold mt-0.5 leading-snug ${isDone ? 'line-through' : ''}">${puja.name}</h3>
+                            <p class="text-xs theme-muted flex items-center mt-1 truncate">
+                                <svg class="w-3.5 h-3.5 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                ${puja.loc}
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="viewOnMap('puja', ${puja.id})" class="theme-card border px-3 py-2 rounded text-xs font-bold shadow-sm whitespace-nowrap min-h-[38px] active:scale-95 transition" style="border-color: var(--gold); color: var(--gold);">
+                        ${t.mapBtn}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderSOS() {
+            const container = document.getElementById('sos-container');
+            container.innerHTML = i18n[currentLang].sos.map(item => `
+                <div class="theme-card p-4 rounded-lg shadow-sm border gold-border">
+                    <span class="text-xs font-bold theme-muted uppercase tracking-wider">${item.tag}</span>
+                    <h3 class="text-lg font-bold mt-1">${item.title}</h3>
+                    <p class="text-sm theme-muted mb-3">${item.desc}</p>
+                    <a href="tel:${item.phone}" class="inline-flex items-center gap-2 bg-[#67001a] text-white px-4 py-2.5 rounded-md text-sm font-medium min-h-[42px]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        ${item.label}
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function renderGuides() {
+            const container = document.getElementById('guide-rules-panel');
+            container.innerHTML = i18n[currentLang].guides.map(item => `
+                <div class="theme-card p-4 rounded-lg shadow-sm border gold-border">
+                    <h3 class="text-base font-bold">${item.title}</h3>
+                    <p class="text-sm theme-muted mt-1 leading-relaxed">${item.text}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderFoodList() {
+            const container = document.getElementById('guide-food-panel');
+            const isBn = currentLang === 'bn';
+            const t = i18n[currentLang];
+
+            container.innerHTML = foodSpots.map(spot => `
+                <div class="theme-card p-4 rounded-lg shadow-sm border food-border flex justify-between items-start gap-3">
+                    <div class="min-w-0">
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-100 text-orange-800">${isBn ? spot.catBn : spot.cat}</span>
+                        <h3 class="text-base font-bold mt-1.5 leading-snug">${isBn ? spot.nameBn : spot.name}</h3>
+                        <p class="text-xs theme-muted mt-1 leading-relaxed">${isBn ? spot.descBn : spot.desc}</p>
+                        <p class="text-xs theme-muted mt-1.5 flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1 shrink-0 text-[#ea580c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            ${isBn ? spot.locBn : spot.loc}
+                        </p>
+                    </div>
+                    <button onclick="viewOnMap('food', ${spot.id})" class="theme-card border px-3 py-2 rounded text-xs font-bold shadow-sm whitespace-nowrap min-h-[38px] active:scale-95 transition" style="border-color: var(--food-accent); color: var(--food-accent);">
+                        ${t.mapBtn}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function switchGuideSubTab(panel) {
+            const rulesBtn = document.getElementById('subtab-rules');
+            const foodBtn = document.getElementById('subtab-food');
+            const rulesPanel = document.getElementById('guide-rules-panel');
+            const foodPanel = document.getElementById('guide-food-panel');
+
+            if (panel === 'rules') {
+                rulesBtn.classList.add('active');
+                foodBtn.classList.remove('active');
+                rulesPanel.classList.remove('hidden');
+                foodPanel.classList.add('hidden');
+            } else {
+                foodBtn.classList.add('active');
+                rulesBtn.classList.remove('active');
+                foodPanel.classList.remove('hidden');
+                rulesPanel.classList.add('hidden');
+            }
+        }
+
+        // --- 9. INITIALIZE MAP & LAYERS ---
+        let map = L.map('map').setView([23.4015, 88.3620], 15);
+        
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps',
+            maxZoom: 20
+        }).addTo(map);
+
+        const poshIcon = L.divIcon({
+            html: `<div style="background-color:#67001a; border:2px solid #b38b4d; width:16px; height:16px; border-radius:50%; box-shadow: 0 2px 4px rgba(0,0,0,0.35);"></div>`,
+            className: '',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+
+        const foodIcon = L.divIcon({
+            html: `<div style="background-color:#ea580c; border:2px solid #ffffff; width:17px; height:17px; border-radius:50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4);"></div>`,
+            className: '',
+            iconSize: [17, 17],
+            iconAnchor: [8, 8]
+        });
+
+        const transitIcon = L.divIcon({
+            html: `<div style="background-color:#1d4ed8; border:2px solid #ffffff; width:18px; height:18px; border-radius:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.4);"></div>`,
+            className: '',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+        });
+
+        const userIcon = L.divIcon({
+            html: `<div class="user-pulse"></div>`,
+            className: '',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+
+        const pujaMarkers = {};
+        const foodMarkers = {};
+        const foodLayer = L.layerGroup().addTo(map);
+
+        // Add Puja Pins
+        pujasList.forEach(puja => {
+            const marker = L.marker([puja.lat, puja.lng], { icon: poshIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="text-align:center; min-width:175px;">
+                        <b style="font-family:'Playfair Display'; color:#67001a; font-size:14px;">${puja.name}</b><br>
+                        <span style="font-family:'Inter'; font-size:11px; color:#555;">${puja.loc}</span>
+                        <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
+                            <button onclick="startRouteTo('puja', ${puja.id})" style="background-color:#fdfbf7; color:#67001a; border:1px solid #b38b4d; padding:7px 10px; border-radius:6px; font-weight:600; cursor:pointer; font-size:11px;">
+                                Preview Route Here
+                            </button>
+                            <button onclick="openGoogleMaps(${puja.lat}, ${puja.lng})" style="background-color:#67001a; color:white; border:none; padding:7px 10px; border-radius:6px; font-weight:600; cursor:pointer; font-size:11px;">
+                                Google Maps (Voice)
+                            </button>
+                        </div>
+                    </div>
+                `);
+            pujaMarkers[puja.id] = marker;
+        });
+
+        // Add Food Pins to Toggleable Layer
+        foodSpots.forEach(spot => {
+            const marker = L.marker([spot.lat, spot.lng], { icon: foodIcon })
+                .addTo(foodLayer)
+                .bindPopup(`
+                    <div style="text-align:center; min-width:185px;">
+                        <span style="display:inline-block; background:#ffedd5; color:#9a3412; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; margin-bottom:4px;">${spot.cat}</span><br>
+                        <b style="font-family:'Playfair Display'; color:#9a3412; font-size:13px;">${spot.name}</b><br>
+                        <span style="font-family:'Inter'; font-size:11px; color:#555;">${spot.loc}</span>
+                        <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
+                            <button onclick="startRouteTo('food', ${spot.id})" style="background-color:#fff7ed; color:#9a3412; border:1px solid #ea580c; padding:7px 10px; border-radius:6px; font-weight:600; cursor:pointer; font-size:11px;">
+                                Preview Route Here
+                            </button>
+                            <button onclick="openGoogleMaps(${spot.lat}, ${spot.lng})" style="background-color:#ea580c; color:white; border:none; padding:7px 10px; border-radius:6px; font-weight:600; cursor:pointer; font-size:11px;">
+                                Google Maps (Voice)
+                            </button>
+                        </div>
+                    </div>
+                `);
+            foodMarkers[spot.id] = marker;
+        });
+
+        // Add Transit / Ghat Pins
+        transitPoints.forEach(tp => {
+            L.marker([tp.lat, tp.lng], { icon: transitIcon })
+                .addTo(map)
+                .bindPopup(`
+                    <div style="text-align:center; min-width:170px;">
+                        <b style="font-family:'Playfair Display'; color:#1d4ed8; font-size:13px;">${tp.name}</b><br>
+                        <span style="font-family:'Inter'; font-size:11px; color:#555;">${tp.sub}</span>
+                        <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+                            <button onclick="startRouteTo('transit', ${tp.id})" style="background-color:#eff6ff; color:#1d4ed8; border:1px solid #1d4ed8; padding:6px 10px; border-radius:6px; font-weight:600; cursor:pointer; font-size:11px;">
+                                Preview Route Here
+                            </button>
+                            <button onclick="openGoogleMaps(${tp.lat}, ${tp.lng})" style="background-color:#1d4ed8; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:600; cursor:pointer; font-size:11px;">
+                                Google Maps (Voice)
+                            </button>
+                        </div>
+                    </div>
+                `);
+        });
+
+        function updateFoodToggleUI() {
+            const btn = document.getElementById('food-toggle-btn');
+            const text = document.getElementById('food-toggle-text');
+            const t = i18n[currentLang];
+
+            btn.setAttribute('aria-pressed', showFoodPins ? 'true' : 'false');
+            text.textContent = showFoodPins ? t.foodOn : t.foodOff;
+
+            if (showFoodPins) {
+                btn.style.backgroundColor = '#ea580c';
+                btn.style.color = '#ffffff';
+                btn.style.border = '1px solid #ea580c';
+            } else {
+                btn.style.backgroundColor = 'var(--card-bg)';
+                btn.style.color = 'var(--text-muted)';
+                btn.style.border = '1px solid var(--border-color)';
+            }
+        }
+
+        function toggleFoodLayer() {
+            showFoodPins = !showFoodPins;
+            if (showFoodPins) {
+                foodLayer.addTo(map);
+            } else {
+                map.removeLayer(foodLayer);
+            }
+            updateFoodToggleUI();
+        }
+
+        // --- 10. TAB NAVIGATION ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`nav-${tabId}`).classList.add('active');
+            
+            window.scrollTo(0, 0);
+
+            if (tabId === 'map') {
+                setTimeout(() => { map.invalidateSize(); }, 250);
+            }
+        }
+
+        function viewOnMap(type, id) {
+            let item = null;
+            let marker = null;
+
+            if (type === 'puja') {
+                item = pujasList.find(p => p.id === id);
+                marker = pujaMarkers[id];
+            } else if (type === 'food') {
+                item = foodSpots.find(f => f.id === id);
+                marker = foodMarkers[id];
+                if (!showFoodPins) {
+                    toggleFoodLayer(); // Ensure food pins are visible
+                }
+            }
+
+            if (!item) return;
+            switchTab('map');
+            setTimeout(() => {
+                map.setView([item.lat, item.lng], 17);
+                if (marker) marker.openPopup();
+            }, 300);
+        }
+
+        // --- 11. HYBRID NAVIGATION LOGIC ---
+        let currentRoute = null;
+        let userMarker = null;
+        let watchId = null;
+
+        function openGoogleMaps(destLat, destLng) {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=walking`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        function locateUserOnce() {
+            if (!navigator.geolocation) {
+                alert("Location services are not supported by your browser.");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    userCoords = { lat, lng };
+                    updateUserMarker(lat, lng);
+                    map.setView([lat, lng], 16);
+                },
+                () => {
+                    alert("Please allow GPS/Location access to see your current position.");
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function updateUserMarker(lat, lng) {
+            if (userMarker) {
+                userMarker.setLatLng([lat, lng]);
+            } else {
+                userMarker = L.marker([lat, lng], { icon: userIcon })
+                    .addTo(map)
+                    .bindPopup("<b>You are here</b>");
+            }
+        }
+
+        function startRouteTo(type, id) {
+            let dest = null;
+            let routeColor = '#67001a';
+
+            if (type === 'puja') {
+                dest = pujasList.find(p => p.id === id);
+            } else if (type === 'food') {
+                dest = foodSpots.find(f => f.id === id);
+                routeColor = '#ea580c';
+            } else if (type === 'transit') {
+                dest = transitPoints.find(t => t.id === id);
+                routeColor = '#1d4ed8';
+            }
+
+            if (!dest) return;
+
+            if (!navigator.geolocation) {
+                alert("Location services are not supported on this device.");
+                return;
+            }
+
+            map.closePopup();
+            const banner = document.getElementById('nav-banner');
+            document.getElementById('nav-dest-name').textContent = (type === 'food' && currentLang === 'bn') ? dest.nameBn : dest.name;
+            document.getElementById('nav-status').textContent = "Finding your live GPS location...";
+            document.getElementById('nav-gmaps-btn').onclick = () => openGoogleMaps(dest.lat, dest.lng);
+            banner.classList.remove('hidden');
+
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            let routeInitialized = false;
+
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    userCoords = { lat: userLat, lng: userLng };
+
+                    updateUserMarker(userLat, userLng);
+
+                    if (!routeInitialized) {
+                        routeInitialized = true;
+
+                        if (currentRoute) {
+                            map.removeControl(currentRoute);
+                        }
+
+                        currentRoute = L.Routing.control({
+                            waypoints: [
+                                L.latLng(userLat, userLng),
+                                L.latLng(dest.lat, dest.lng)
+                            ],
+                            routeWhileDragging: false,
+                            addWaypoints: false,
+                            showAlternatives: false,
+                            show: false,
+                            lineOptions: {
+                                styles: [{ color: routeColor, opacity: 0.85, weight: 6 }]
+                            },
+                            createMarker: () => null
+                        }).on('routesfound', function(e) {
+                            const summary = e.routes[0].summary;
+                            const distKm = (summary.totalDistance / 1000).toFixed(2);
+                            const walkMins = Math.max(1, Math.round(summary.totalDistance / 80));
+                            document.getElementById('nav-status').textContent = `${distKm} km • Approx. ${walkMins} min walk`;
+                        }).addTo(map);
+
+                        map.fitBounds([
+                            [userLat, userLng],
+                            [dest.lat, dest.lng]
+                        ], { padding: [50, 50] });
+                    }
+                },
+                () => {
+                    document.getElementById('nav-status').textContent = "GPS blocked. Tap below to use Google Maps directly.";
+                },
+                { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+            );
+        }
+
+        function stopNavigation() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            if (currentRoute) {
+                map.removeControl(currentRoute);
+                currentRoute = null;
+            }
+            document.getElementById('nav-banner').classList.add('hidden');
+        }
+
+        // --- 12. INITIALIZE APP ON LOAD ---
+        applyDarkMode();
+        applyLanguage();
+    </script>
+</body>
+</html>
