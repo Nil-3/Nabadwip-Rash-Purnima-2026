@@ -1,0 +1,18 @@
+{
+  "name": "Nabadwip Rash Purnima 2026",
+  "short_name": "Rash Purnima",
+  "description": "Mobile-first festival guide for Nabadwip Rash Purnima 2026 with 31 pujas, 10 food spots, and live map navigation.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fdfbf7",
+  "theme_color": "#67001a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2367001a'/%3E%3Ccircle cx='256' cy='256' r='140' fill='none' stroke='%23b38b4d' stroke-width='28'/%3E%3Ccircle cx='256' cy='256' r='54' fill='%23fdfbf7'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
